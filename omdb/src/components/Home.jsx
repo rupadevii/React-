@@ -1,61 +1,57 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 const KEY = import.meta.env.VITE_API_KEY;
 const URL = `http://www.omdbapi.com/?i=tt3896198&apikey=${KEY}`;
-
-function debounce(func, delay) {
-    let timer;
-    return function (...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            func(...args);
-        }, delay);
-    };
-}
-
-async function fetchData(value, setMovie) {
-    try {
-        const res = await fetch(`${URL}&t=${value}`);
-        const data = await res.json();
-        // console.log(data);
-        if (data.Response === "True") {
-            const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
-
-            const existingBookmark = bookmarks.find(
-                (item) => item.Title === data.Title,
-            );
-            if (existingBookmark) {
-                setMovie({ ...data, isBookmarked: true });
-            } else {
-                setMovie({ ...data, isBookmarked: false });
-            }
-        } else {
-            console.log("Response not found");
-            setMovie(null);
-        }
-    } catch (error) {
-        setMovie(null);
-        console.log(error);
-    }
-}
-
-const debouncedFunc = debounce(fetchData, 500);
 
 export default function Home() {
     const [input, setInput] = useState("");
     const [movie, setMovie] = useState(null);
     const navigate = useNavigate();
+     
+    async function fetchData(value) {
+        try {
+            const res = await fetch(`${URL}&t=${value}`);
+            const data = await res.json();
+            // console.log(data);
+            if (data.Response === "True") {
+                const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
+    
+                const existingBookmark = bookmarks.find(
+                    (item) => item.Title === data.Title,
+                );
+                if (existingBookmark) {
+                    setMovie({ ...data, isBookmarked: true });
+                } else {
+                    setMovie({ ...data, isBookmarked: false });
+                }
+            } else {
+                console.log("Response not found");
+                setMovie(null);
+            }
+        } catch (error) {
+            setMovie(null);
+            console.log(error);
+        }
+    }
     
     function handleChange(e) {
-        setInput(e.target.value.trim());
-
+        setInput(e.target.value);
+        
         if (e.target.value.trim() === "") {
             setMovie(null);
             return;
         }
-
-        debouncedFunc(e.target.value, setMovie);
+        
+        // debouncedFunc(e.target.value, setMovie);
     }
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchData(input)
+        }, 1500)
+
+        return () => clearTimeout(timer)
+    }, [input])
 
     function handleClick() {
         navigate(`${movie.Title}`, { state: movie });
