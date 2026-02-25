@@ -7,8 +7,9 @@ export default function Home() {
     const [input, setInput] = useState("");
     const [movie, setMovie] = useState(null);
     const navigate = useNavigate();
-     
+    
     async function fetchData(value) {
+        if(!value) return;
         try {
             const res = await fetch(`${URL}&t=${value}`);
             const data = await res.json();
