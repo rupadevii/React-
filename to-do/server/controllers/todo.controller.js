@@ -34,10 +34,10 @@ export const addTodo = async (req, res) => {
 export const updateTodo = async (req, res) => {
     try{
         const {id} = req.params;
-        const {isCompleted} = req.body;
-        
-        await Todo.findByIdAndUpdate(id, {isCompleted: isCompleted})
-    
+        const todo = await Todo.findById(id)
+        todo.isCompleted = !todo.isCompleted
+        await todo.save()
+            
         return res.status(200).json({msg: "Todo updated successfully"})
     }
     catch(error){

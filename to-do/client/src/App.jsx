@@ -1,33 +1,78 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateTodo, deleteTodo, addTodo, fetchTodos } from './redux/todoSlice'
+const URL = import.meta.env.VITE_API_URL
 
 export default function App() {
     const [input, setInput] = useState("")
-    const [todos, setTodos] = useState([])
+    const {todos, loading} = useSelector((state) => state.todo)
+    const dispatch = useDispatch()
+
+    useEffect(() => {
+        dispatch(fetchTodos())
+    }, [])
 
     async function handleSubmit(e){
         e.preventDefault()
-
-        try {
-            const res = await fetch("http://localhost:5000/api/todo/", {
+        let todo = {name: input, isCompleted: false}
+        try{
+            const res = await fetch(`${URL}`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({name: input, isCompleted: false})
-            })
+                body: JSON.stringify(todo)
+                }
+            )
+            const data = await res.json()
+            
+            todo = {...todo, _id:data.newTodo._id}
+            dispatch(addTodo({todo}))
+            
+        }
+        catch(error){
+            console.error(error)
+        }
+        setInput("")
+    }
+
+    async function removeTodo(index){
+        try{
+            const res = await fetch(`${URL}/${index}`, {
+                method: "DELETE",
+                }
+            )
             const data = await res.json()
             console.log(data)
-            setTodos(prev => ([...prev, {id: data.newTodo._id, todo: input, isCompleted: false}]))
-            setInput("")
-        } catch (error) {
+            dispatch(deleteTodo({id: index}))
+            
+        }
+        catch(error){
             console.error(error)
         }
     }
-    console.log(todos)
 
-    function handleChange(id){
+    async function updateTodoz(index){
+        try{
+            const res = await fetch(`${URL}/${index}`, {
+                method: "PUT",
+                }
+            )
+            const data = await res.json()
+            console.log(data)
+            dispatch(updateTodo({id: index}))
+            
+        }
+        catch(error){
+            console.error(error)
+        }
     }
+
+    if(loading){
+        return <div>Loading...</div>
+    }
+
     return (
         <div>
             <form onSubmit={handleSubmit}>
@@ -35,10 +80,12 @@ export default function App() {
                 <button type='submit'>Add</button>
             </form>
             <div>
-                {todos.map((todo, index) => (
-                    <div key={todo.id}>
-                        <input type="checkbox" onChange={() => handleChange(index)} checked={checboxes[index]}/>
-                        <label>{todo.todo}</label>
+
+                {todos.map((todo) => (
+                    <div key={todo._id}>
+                        <input type="checkbox" onChange={() => updateTodoz(todo._id)} checked={todo.isCompleted}/>
+                        <label>{todo.name}</label>
+                        <button onClick={() => removeTodo(todo._id)}>Delete</button>
                     </div>
                 ))}
             </div>
