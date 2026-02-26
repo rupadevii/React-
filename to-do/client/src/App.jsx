@@ -6,7 +6,7 @@ const URL = import.meta.env.VITE_API_URL
 
 export default function App() {
     const [input, setInput] = useState("")
-    const {todos, loading} = useSelector((state) => state.todo)
+    const {todos, loading, error} = useSelector((state) => state.todo)
     const dispatch = useDispatch()
 
     useEffect(() => {
@@ -15,6 +15,7 @@ export default function App() {
 
     async function handleSubmit(e){
         e.preventDefault()
+        if(input.trim() === "") return
         let todo = {name: input, isCompleted: false}
         try{
             const res = await fetch(`${URL}`, {
@@ -71,6 +72,10 @@ export default function App() {
 
     if(loading){
         return <div>Loading...</div>
+    }
+
+    if(error){
+        return <div>Something went wrong...</div>
     }
 
     return (

@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit'
 
-const URL = 'http://localhost:5000/api/todo/'
+const URL = import.meta.env.VITE_API_URL
 
 const initialState = {
     todos: [],
@@ -11,7 +11,7 @@ const initialState = {
 export const fetchTodos = createAsyncThunk (
     'todos/fetchTodos',
     async () => {
-        const res = await fetch(URL)
+        const res = await fetch(`${URL}/`)
         const data = await res.json()
         return data.todos
     }
@@ -36,12 +36,11 @@ const todoSlice = createSlice({
         builder
             .addCase(fetchTodos.pending, (state) => {
                 state.loading = true
-                state.error = false
+                state.error = null
             })
             .addCase(fetchTodos.fulfilled, (state, action) => {
                 state.todos = action.payload
                 state.loading = false
-                state.error = false
             })
             .addCase(fetchTodos.rejected, (state, action) => {
                 state.loading = false
